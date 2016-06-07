@@ -1,0 +1,26 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .noSelect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+    </style>
+    <meta charset="utf-8">
+    <title>Assignment 2</title>
+    <script type="text/javascript" src="./assetmanager.js"></script>
+    <script type="text/javascript" src="./gameengine.js"></script>
+    <script type="text/javascript" src="./main.js"></script>
+</head>
+<body>
+    <h4 class="noSelect">Main bases will spawn little ships. Ships that live long enough will turn into 
+    new bases for a maximum of three bases per color. Bases have 2 health and will lose health when a different
+    color ship hits the base.</h4>
+    <canvas id="gameWorld" width="800" height="800" style="border: 1px solid white; background: black"></canvas>
+</body>
+</html>
