@@ -3,6 +3,34 @@
  * Assignment 2
  */
 
+var socket = io.connect("http://76.28.150.193:8888");
+
+socket.on("load", function (data) {
+    console.log(data);
+    gameEngine.entities = [];
+    gameEngine.bases = [];
+    for (var i = 0; i < data.ships.length; i++) {
+        var tempShip = data.ships[i];
+        var loadShip = new Ship(gameEngine, tempShip.x, tempShip.y, tempShip.color);
+        loadShip.setExperience(tempShip.experience);
+        loadShip.setVelocity(tempShip.velocity);
+        gameEngine.addEntity(loadShip);
+    }
+
+    for (var i = 0; i < data.bases.length; i++) {
+        var tempBase = data.bases[i];
+        var loadBase = new Base(gameEngine, tempBase.x, tempBase.y, tempBase.type, tempBase.color);
+        loadBase.setHealth(tempBase.health);
+        loadBase.setSpawnCount(tempBase.spawnCount);
+        loadBase.setVelocity(tempBase.velocity);
+        gameEngine.addBase(loadBase);
+    }
+});
+
+
+//socket.emit("load", { studentname: "Gabriel Houle", statename: "theState" });
+
+
 function distance(a, b) {
     var difX = a.x - b.x;
     var difY = a.y - b.y;
@@ -26,6 +54,18 @@ function Base(game, x, y, type, color) {
 
 Base.prototype = new Entity();
 Base.prototype.constructor = Base;
+
+Base.prototype.setHealth = function (e) {
+    this.health = e;
+}
+
+Base.prototype.setVelocity = function (e) {
+    this.velocity = e;
+}
+
+Base.prototype.setSpawnCount = function (e) {
+    this.spawnCount = e;
+}
 
 Base.prototype.collide = function (other) {
     return distance(this, other) < this.radius + other.radius;
@@ -119,6 +159,14 @@ function Ship(game, x, y, color) {
 
 Ship.prototype = new Entity();
 Ship.prototype.constructor = Ship;
+
+Ship.prototype.setExperience = function (e) {
+    this.experience = e;
+}
+
+Ship.prototype.setVelocity = function (e) {
+    this.velocity = e;
+}
 
 Ship.prototype.collide = function (other) {
     return distance(this, other) < this.radius + other.radius;
@@ -265,15 +313,28 @@ var collideBottom = function (ent) {
 };
 
 var ASSET_MANAGER = new AssetManager();
+var gameEngine = new GameEngine();
 
 ASSET_MANAGER.queueDownload("");
 
 ASSET_MANAGER.downloadAll(function () {
     console.log("starting up da sheild");
     var canvas = document.getElementById('gameWorld');
+    var saveBtn = document.getElementById('Save');
+    var loadBtn = document.getElementById('Load')
     var ctx = canvas.getContext('2d');
 
-    var gameEngine = new GameEngine();
+    gameEngine = new GameEngine();
+
+    socket.on("connect", function () {
+        console.log("Socket connected.")
+    });
+    socket.on("disconnect", function () {
+        console.log("Socket disconnected.")
+    });
+    socket.on("reconnect", function () {
+        console.log("Socket reconnected.")
+    });
     
     var base1 = new Base(gameEngine, 100, 100, "main", colors[3]);
     gameEngine.addBase(base1);
@@ -289,4 +350,38 @@ ASSET_MANAGER.downloadAll(function () {
 
     gameEngine.init(ctx);
     gameEngine.start();
+
+
+    saveBtn.addEventListener("click", function (e) {
+        console.log("save");
+
+        var shipList = [];
+        var baseList = [];
+
+        for (var i = 0; i < gameEngine.entities.length; i++) {
+            var currShip = gameEngine.entities[i];
+            var tempShip = {
+                experience: currShip.radius, color: currShip.color, x: currShip.x, y: currShip.y,
+                velocity: currShip.velocity
+            };
+
+            shipList.push(tempShip);
+        }
+
+        for (var i = 0; i < gameEngine.bases.length; i++) {
+            var currBase = gameEngine.bases[i];
+            var tempBase = {
+                color: currBase.color, type: currBase.type, health: currBase.health, spawnCount: currBase.spawnCount,
+                velocity: currBase.velocity, x: currBase.x, y: currBase.y
+            }
+            baseList.push(tempBase);
+        }
+
+        socket.emit("save", {studentname: "Gabriel Houle", statename: "aState", ships: shipList, bases: baseList});
+    }, false);
+
+    loadBtn.addEventListener("click", function (e) {
+        console.log("load");
+        socket.emit("load", {studentname: "Gabriel Houle", statename: "aState"});
+    }, false);
 });
